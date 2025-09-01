@@ -1,0 +1,36 @@
+name: Test and Deploy whatsapp-server
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Do you want to deploy?"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - true
+          - false
+
+
+jobs:
+  test-whatsapp-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+
+  deploy-whatsapp-server:
+    runs-on: ubuntu-latest
+    needs: test-whatsapp-server
+    if: github.event.inputs.deploy == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
