@@ -19,7 +19,6 @@ jobs:
 
     env:
         DOCKERFILE_DIR: deployment
-        AWS_APPLICATION_NAME: whatsapp-server
         ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
         DOT_ENV_PATH: .env
 
@@ -74,8 +73,70 @@ jobs:
     needs: test-whatsapp-server
     if: github.event.inputs.deploy == 'true'
 
+    env:
+        DOCKERFILE_DIR: deployment
+        AWS_APPLICATION_NAME: whatsapp-server-template
+        ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+        AWS_PUBLIC_S3_FOLDER_URI: ${{ secrets.AWS_PUBLIC_S3_FOLDER_URI }}
+        DOT_ENV_PATH: .env
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           submodules: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create .env file
+        run: |
+          echo "WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}" >> $DOT_ENV_PATH
+          echo "WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}" >> $DOT_ENV_PATH
+          echo "WHATSAPP_SERVER_NUMBER_ID=${{ secrets.WHATSAPP_SERVER_NUMBER_ID }}" >> $DOT_ENV_PATH
+
+      - name: Pull Docker image from ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO_URL
+          docker pull $ECR_REPO_URL:latest
+
+      - name: Build Docker image
+        run: |
+          docker build -f $DOCKERFILE_DIR/Dockerfile \
+            --cache-from $ECR_REPO_URL:latest \
+            -t $ECR_REPO_URL:latest .
+
+      - name: Run pytest tests inside Docker container
+        run: |
+          CONTAINER_ID=$(docker run -d -v $PWD:/results $ECR_REPO_URL:latest)
+          docker exec $CONTAINER_ID python3 -m pytest -v -s /whatsapp-server-template/tests/ --junitxml=/results/test-results-2.xml
+          TEST_RESULT=$?
+          docker stop $CONTAINER_ID
+          exit $TEST_RESULT
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-2
+          path: test-results-2.xml
+
+      - name: Fail job if tests failed
+        if: steps.run-tests.outcome == 'failure'
+        run: |
+          echo "Tests failed"
+          exit 1
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push $ECR_REPO_URL:latest
+
+      - name: Upload Dockerrun.aws.json to S3
+        run: |
+          cd $DOCKERFILE_DIR
+          zip $AWS_APPLICATION_NAME.zip Dockerrun.aws.json
+          aws s3 cp $AWS_APPLICATION_NAME.zip $AWS_PUBLIC_S3_FOLDER_URI/$AWS_APPLICATION_NAME.zip
