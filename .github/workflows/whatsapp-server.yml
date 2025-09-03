@@ -99,15 +99,9 @@ jobs:
           echo "WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}" >> $DOT_ENV_PATH
           echo "WHATSAPP_SERVER_NUMBER_ID=${{ secrets.WHATSAPP_SERVER_NUMBER_ID }}" >> $DOT_ENV_PATH
 
-      - name: Pull Docker image from ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO_URL
-          docker pull $ECR_REPO_URL:latest
-
       - name: Build Docker image
         run: |
           docker build -f $DOCKERFILE_DIR/Dockerfile \
-            --cache-from $ECR_REPO_URL:latest \
             -t $ECR_REPO_URL:latest .
 
       - name: Run pytest tests inside Docker container
