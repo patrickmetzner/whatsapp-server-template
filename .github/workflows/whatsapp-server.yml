@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-        DOCKERFILE_DIR: deployment/Dockerfile
+        DOCKERFILE_DIR: deployment
         AWS_APPLICATION_NAME: whatsapp-server
         ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
         DOT_ENV_PATH: .env
