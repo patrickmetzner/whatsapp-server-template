@@ -127,6 +127,7 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO_URL
           docker push $ECR_REPO_URL:latest
 
       - name: Upload Dockerrun.aws.json to S3
