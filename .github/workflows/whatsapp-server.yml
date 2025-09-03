@@ -19,7 +19,7 @@ jobs:
 
     env:
         DOCKERFILE_DIR: deployment
-        ECR_REPO_URL:latest: ${{ secrets.ECR_REPO_URL:latest }}
+        ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
         DOT_ENV_PATH: .env
 
     steps:
@@ -76,7 +76,7 @@ jobs:
     env:
         DOCKERFILE_DIR: deployment
         AWS_APPLICATION_NAME: whatsapp-server-template
-        ECR_REPO_URL:latest: ${{ secrets.ECR_REPO_URL:latest }}
+        ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
         AWS_PUBLIC_S3_FOLDER_URI: ${{ secrets.AWS_PUBLIC_S3_FOLDER_URI }}
         DOT_ENV_PATH: .env
 
