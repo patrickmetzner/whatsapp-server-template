@@ -129,4 +129,4 @@ jobs:
         run: |
           cd $DOCKERFILE_DIR
           zip $AWS_APPLICATION_NAME.zip Dockerrun.aws.json
-          aws s3 cp $AWS_APPLICATION_NAME.zip $AWS_PUBLIC_S3_FOLDER_URI/$AWS_APPLICATION_NAME.zip
+          aws s3 cp $AWS_APPLICATION_NAME.zip $AWS_PUBLIC_S3_FOLDER_URI$AWS_APPLICATION_NAME.zip
