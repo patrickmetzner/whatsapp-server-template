@@ -77,7 +77,9 @@ jobs:
         DOCKERFILE_DIR: deployment
         AWS_APPLICATION_NAME: whatsapp-server-template
         ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+        AWS_PUBLIC_S3_BUCKET_NAME: ${{ secrets.AWS_PUBLIC_S3_BUCKET_NAME }}
         AWS_PUBLIC_S3_FOLDER_URI: ${{ secrets.AWS_PUBLIC_S3_FOLDER_URI }}
+        AWS_PUBLIC_S3_KEY: ${{ secrets.AWS_PUBLIC_S3_KEY }}
         DOT_ENV_PATH: .env
 
     steps:
@@ -136,3 +138,16 @@ jobs:
           sed -i -e "s|ECR_REPO_URL|${ECR_REPO_URL}|g" Dockerrun.aws.json
           zip $AWS_APPLICATION_NAME.zip Dockerrun.aws.json
           aws s3 cp $AWS_APPLICATION_NAME.zip $AWS_PUBLIC_S3_FOLDER_URI$AWS_APPLICATION_NAME.zip
+
+      - name: Deploy app
+        run: |
+          pip3 install --upgrade pip
+          pip3 install awsebcli
+          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
+          aws elasticbeanstalk create-application-version \
+            --application-name $AWS_APPLICATION_NAME \
+            --region ${{ secrets.AWS_REGION }} \
+            --version-label $TIMESTAMP \
+            --source-bundle S3Bucket="$AWS_PUBLIC_S3_BUCKET_NAME",S3Key="$AWS_PUBLIC_S3_KEY/$AWS_APPLICATION_NAME.zip"
+          eb init -p Docker --region ${{ secrets.AWS_REGION }} $AWS_APPLICATION_NAME
+          eb deploy $AWS_APPLICATION_NAME --version $TIMESTAMP --timeout 30
