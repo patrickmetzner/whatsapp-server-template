@@ -133,5 +133,6 @@ jobs:
       - name: Upload Dockerrun.aws.json to S3
         run: |
           cd $DOCKERFILE_DIR
+          sed -i -e "s|ECR_REPO_URL|${ECR_REPO_URL}|g" Dockerrun.aws.json
           zip $AWS_APPLICATION_NAME.zip Dockerrun.aws.json
           aws s3 cp $AWS_APPLICATION_NAME.zip $AWS_PUBLIC_S3_FOLDER_URI$AWS_APPLICATION_NAME.zip
