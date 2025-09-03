@@ -19,7 +19,7 @@ jobs:
 
     env:
         DOCKERFILE_DIR: deployment
-        ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+        ECR_IMAGE_URI: ${{ secrets.ECR_IMAGE_URI }}
         DOT_ENV_PATH: .env
 
     steps:
@@ -44,11 +44,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -f $DOCKERFILE_DIR/Dockerfile \
-            -t $ECR_REPO_URL:latest .
+            -t $ECR_IMAGE_URI .
 
       - name: Run pytest tests inside Docker container
         run: |
-          CONTAINER_ID=$(docker run -d -v $PWD:/results $ECR_REPO_URL:latest)
+          CONTAINER_ID=$(docker run -d -v $PWD:/results $ECR_IMAGE_URI)
           docker exec $CONTAINER_ID python3 -m pytest -v -s /whatsapp-server-template/tests/ --junitxml=/results/test-results-1.xml
           TEST_RESULT=$?
           docker stop $CONTAINER_ID
@@ -76,7 +76,7 @@ jobs:
     env:
         DOCKERFILE_DIR: deployment
         AWS_APPLICATION_NAME: whatsapp-server-template
-        ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+        ECR_IMAGE_URI: ${{ secrets.ECR_IMAGE_URI }}
         AWS_PUBLIC_S3_FOLDER_URI: ${{ secrets.AWS_PUBLIC_S3_FOLDER_URI }}
         DOT_ENV_PATH: .env
 
@@ -102,11 +102,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -f $DOCKERFILE_DIR/Dockerfile \
-            -t $ECR_REPO_URL:latest .
+            -t $ECR_IMAGE_URI .
 
       - name: Run pytest tests inside Docker container
         run: |
-          CONTAINER_ID=$(docker run -d -v $PWD:/results $ECR_REPO_URL:latest)
+          CONTAINER_ID=$(docker run -d -v $PWD:/results $ECR_IMAGE_URI)
           docker exec $CONTAINER_ID python3 -m pytest -v -s /whatsapp-server-template/tests/ --junitxml=/results/test-results-2.xml
           TEST_RESULT=$?
           docker stop $CONTAINER_ID
@@ -127,7 +127,7 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
-          docker push $ECR_REPO_URL:latest
+          docker push $ECR_IMAGE_URI
 
       - name: Upload Dockerrun.aws.json to S3
         run: |
