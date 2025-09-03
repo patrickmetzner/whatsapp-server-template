@@ -125,10 +125,6 @@ jobs:
           echo "Tests failed"
           exit 1
 
-      - name: Push Docker image to ECR
-        run: |
-          docker push $ECR_REPO_URL:latest
-
       - name: Upload Dockerrun.aws.json to S3
         run: |
           cd $DOCKERFILE_DIR
